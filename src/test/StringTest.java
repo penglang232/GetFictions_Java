@@ -1,6 +1,8 @@
 package test;
 
 public class StringTest {
+	// http://www.xx88dushu.com/
+	
 	public static void main(String[] args) {
 		String c = "=\"/shu/108-1610\">第1647章 神物出</a></li><li><a";
 		String c_path = c.substring(c.indexOf("-"),c.lastIndexOf("\""));

@@ -15,14 +15,14 @@ import util.ShowUtils;
 
 public class Main {
 	
-	private static final String charset = "gbk";
-//	private static final String charset = "utf-8";
+//	private static final String charset = "gbk";
+	private static final String charset = "utf-8";
 
 	//public static String url = "http://www.88dus.com";
 	
-	public static String full_url = "https://www.x88dushu.com/xiaoshuo/60/60527/16193609.html";
+	public static String full_url = "http://www.xx88dushu.com/xiaoshuo/1256/0.html";
 	
-	public static String fiction_name = "深海战神";
+	public static String fiction_name = "从斗罗开始打卡";
 
 	public static String url = "http://www.x88dushu.com";
 	

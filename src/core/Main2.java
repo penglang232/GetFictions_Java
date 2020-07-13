@@ -15,6 +15,7 @@ import util.ShowUtils;
 
 /**
  * http://www.88dushu.cc 小说下载
+ * https://www.baka.cc/ 小说下载
  * 
  * @author 彭琅
  *
@@ -25,11 +26,15 @@ public class Main2 {
 //	private static final String charset = "gbk";
 	private static final String charset = "utf-8";
 
-	public static String url = "http://www.88dushu.cc/shu/108";
+	public static String url = "http://www.88dushu.cc/shu/7417";
 	
-	public static int c_index = 1;
+	public static int c_index = 1096;
 	
 	public static FileWriter writer = null;
+	
+	public static int retry = 0;
+	
+	public static final int MAX_RETRY = 10;
 	
 	public static void main(String[] args){
 		long start = System.currentTimeMillis();
@@ -57,7 +62,7 @@ public class Main2 {
 		// 获取小说名及作者
 		String title = mainInfo.substring(mainInfo.indexOf("h1")+3, mainInfo.indexOf("</"));
 		writer = new FileWriter(title + ".txt",true);
-//		System.out.println(title);
+		System.out.println(title);
 		String auth = mainInfo.substring(mainInfo.indexOf("<span")+6, mainInfo.indexOf("</span"));
 //		System.out.println(auth);
 		
@@ -72,13 +77,14 @@ public class Main2 {
 		
 		// 获取章节名称及对应url
 		String chapters = introduce.substring(introduce.lastIndexOf("chapter"), introduce.indexOf("<footer"));
-		//System.out.println(chapters);
+//		System.out.println(chapters);
 		String[] chapterList = chapters.split("href");
 		String c_path = "";
 		String c_name = "";
 		String c ="";
 		// 获取章节具体内容
 		for(int i=c_index;i<chapterList.length;i++) {
+			retry = 0;
 			c = chapterList[i];
 			c_path = c.substring(c.indexOf("-"),c.lastIndexOf("\""));
 			c_name = c.substring(c.indexOf(">")+1,c.indexOf("</"));
@@ -86,10 +92,28 @@ public class Main2 {
 			System.out.println(c_name);
 
 			// 写入章节名
-			writer.write(title);
+			writer.write(c_name);
 			writer.write("\r\n");
 			// 获取写入章节内容
-			getAndSaveFiction(url + c_path);
+			try {
+				getAndSaveFiction(url + c_path);
+			} catch (Exception e) {
+				System.out.println(c_name+" 下载失败,正在重试");
+				for(;retry<MAX_RETRY;retry++) {
+					try {
+						getAndSaveFiction(url + c_path);
+						break;
+					} catch (Exception e1) {
+						System.out.println(c_name+" 第"+(retry+1)+"重试失败");
+						// 等待2秒再重试
+						Thread.sleep(2000);
+					}
+					
+				}
+				if(retry >= MAX_RETRY) {
+					throw e;
+				}
+			}
 		}
 	}
 
@@ -152,7 +176,7 @@ public class Main2 {
 		String buf = getDocument(index);
 		
 		String fictionContent = buf.substring(buf.indexOf("read")+6,buf.lastIndexOf("tb")-18);
-		fictionContent = fictionContent.replace("<p>", "").replace("</p>", "");
+		fictionContent = fictionContent.replace("<p>", "").replace("</p>", "\r\n");
 //	    System.out.println(fictionContent);
 	    writer.write(fictionContent);
 	    writer.write("\r\n");
