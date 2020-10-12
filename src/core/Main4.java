@@ -27,9 +27,11 @@ public class Main4 {
 	private static final String charset = "gbk";
 //	private static final String charset = "utf-8";
 
-	public static String url = "https://www.xncwxw.net/files/article/html/31/31566/";
+//	public static String url = "https://www.xncwxw.net/files/article/html/26/26353/";
+//	public static int c_index = 124;
+	public static String url = "https://www.xncwxw.net/files/article/html/10/10454/";
 	
-	public static int c_index = 287;
+	public static int c_index = 1;
 	
 	public static FileWriter writer = null;
 	
@@ -99,15 +101,16 @@ public class Main4 {
 			try {
 				getAndSaveFiction(url + c_path);
 			} catch (Exception e) {
-				System.out.println(c_name+" 下载失败,正在重试");
+				System.out.println("【"+i+"】:"+c_name+" 下载失败,正在重试");
 				for(;retry<MAX_RETRY;retry++) {
 					try {
+						Thread.sleep(2000);
 						getAndSaveFiction(url + c_path);
 						break;
 					} catch (Exception e1) {
-						System.out.println(c_name+" 第"+(retry+1)+"重试失败");
-						// 等待5秒再重试
-						Thread.sleep(5000);
+						System.out.println("【"+i+"】:"+c_name+" 第"+(retry+1)+"重试失败");
+						// 等待2秒再重试
+						Thread.sleep(2000);
 					}
 					
 				}
@@ -116,8 +119,7 @@ public class Main4 {
 				}
 			}
 
-			System.out.println(c_name+" 下载完成！");
-			Thread.sleep(2000);
+			System.out.println("【"+i+"】:"+c_name+" 下载完成！");
 		}
 	}
 
