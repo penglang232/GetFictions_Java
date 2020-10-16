@@ -14,19 +14,16 @@ import ui.MainFrame;
 import util.ShowUtils;
 
 /**
- * http://www.88dushu.cc 小说下载
- * https://www.baka.cc/ 小说下载
- * http://www.88dushu.la/ 小说下载
  * https://www.88dushw.com/
  * 
  * @author 彭琅
  *
  */
 
-public class Main2 {
+public class Main5 {
 	
-//	private static final String charset = "gbk";
-	private static final String charset = "utf-8";
+	private static final String charset = "gbk";
+//	private static final String charset = "utf-8";
 
 //	public static String url = "http://www.88dushu.cc/shu/7417";
 	public static String url = "https://www.88dushw.com/xiaoshuo/193/";
@@ -59,14 +56,17 @@ public class Main2 {
 	private static void getFiction(String url) throws Exception {
 		// 获取目录内容
 		String introduce = getDocument(url);
-		String mainInfo = introduce.substring(introduce.indexOf("maininfo"), introduce.indexOf("right"));
+//		System.out.println(introduce);
+		String mainInfo = introduce.substring(introduce.indexOf("head"), introduce.indexOf("</head"));
 //		System.out.println(mainInfo);
 		
 		// 获取小说名及作者
-		String title = mainInfo.substring(mainInfo.indexOf("h1")+3, mainInfo.indexOf("</"));
+		String title = mainInfo.substring(mainInfo.indexOf("og:novel:book_name")+29);
+		title = title.substring(0, title.indexOf("\">"));
 		writer = new FileWriter(title + ".txt",true);
 		System.out.println(title);
-		String auth = mainInfo.substring(mainInfo.indexOf("<span")+6, mainInfo.indexOf("</span"));
+		String auth = mainInfo.substring(mainInfo.indexOf("og:novel:author")+26);
+		auth = auth.substring(0, auth.indexOf("\">"));
 //		System.out.println(auth);
 		
 		// 第一次时写入小说名及作者
@@ -79,7 +79,7 @@ public class Main2 {
 		}
 		
 		// 获取章节名称及对应url
-		String chapters = introduce.substring(introduce.lastIndexOf("chapter"), introduce.indexOf("<footer"));
+		String chapters = introduce.substring(introduce.indexOf("mulu2"), introduce.indexOf("mulu3"));
 //		System.out.println(chapters);
 		String[] chapterList = chapters.split("href");
 		String c_path = "";
@@ -89,34 +89,39 @@ public class Main2 {
 		for(int i=c_index;i<chapterList.length;i++) {
 			retry = 0;
 			c = chapterList[i];
-			c_path = c.substring(c.indexOf("-"),c.lastIndexOf("\""));
+			c_path = c.substring(c.indexOf("\"")+1,c.lastIndexOf("\""));
 			c_name = c.substring(c.indexOf(">")+1,c.indexOf("</"));
-//			System.out.println(url + c_path +" " + c_name);
-			System.out.println(c_name);
+//			String chapter = url + c_path;
+			String chapter = c_path;
+//			System.out.println(chapter +" " + c_name);
+//			System.out.println(c_name);
 
 			// 写入章节名
 			writer.write(c_name);
 			writer.write("\r\n");
 			// 获取写入章节内容
+
 			try {
-				getAndSaveFiction(url + c_path);
+				getAndSaveFiction(chapter);
 			} catch (Exception e) {
-				System.out.println(c_name+" 下载失败,正在重试");
+				System.out.println("【"+i+"】:"+c_name+" 下载失败,正在重试");
 				for(;retry<MAX_RETRY;retry++) {
 					try {
-						getAndSaveFiction(url + c_path);
+						getAndSaveFiction(chapter);
 						break;
 					} catch (Exception e1) {
-						System.out.println(c_name+" 第"+(retry+1)+"重试失败");
-						// 等待2秒再重试
-						Thread.sleep(2000);
+						System.out.println("【"+i+"】:"+c_name+" 第"+(retry+1)+"重试失败");
 					}
-					
+					// 等待2秒再重试
+					Thread.sleep(2000);
 				}
 				if(retry >= MAX_RETRY) {
 					throw e;
 				}
 			}
+			
+			System.out.println("【"+i+"】:"+c_name+" 下载完成！");
+//			Thread.sleep(2000);
 		}
 	}
 
@@ -178,8 +183,10 @@ public class Main2 {
 		// 获取章节内容
 		String buf = getDocument(index);
 		
-		String fictionContent = buf.substring(buf.indexOf("read")+6,buf.lastIndexOf("tb")-18);
-		fictionContent = fictionContent.replace("<p>", "").replace("</p>", "\r\n");
+		String fictionContent = buf.substring(buf.indexOf("yd_text2"));
+	    fictionContent = fictionContent.substring(0, fictionContent.indexOf("</div>"));
+	    fictionContent = fictionContent.replace("yd_text2\">    ", "").replaceAll("&nbsp;", " ");
+	    fictionContent = fictionContent.replaceAll("<br /><br />", "\r\n").replaceAll("<br />", "\r\n");
 //	    System.out.println(fictionContent);
 	    writer.write(fictionContent);
 	    writer.write("\r\n");

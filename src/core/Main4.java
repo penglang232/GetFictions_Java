@@ -1,17 +1,14 @@
 package core;
 
-import java.awt.Toolkit;
 import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.Authenticator;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
-
-import javax.swing.JTextArea;
-
-import ui.MainFrame;
-import util.ShowUtils;
 
 /**
  * http://www.88dushu.cc 小说下载
@@ -28,8 +25,8 @@ public class Main4 {
 //	private static final String charset = "utf-8";
 
 //	public static String url = "https://www.xncwxw.net/files/article/html/26/26353/";
-//	public static int c_index = 124;
-	public static String url = "https://www.xncwxw.net/files/article/html/10/10454/";
+//	public static int c_index = 43;
+	public static String url = "https://www.xncwxw.net/files/article/html/24/24412/";
 	
 	public static int c_index = 1;
 	
@@ -39,7 +36,33 @@ public class Main4 {
 	
 	public static final int MAX_RETRY = 10;
 	
+//	public static Proxy proxy = null;
+	
+	static {
+		//创建代理服务器
+//        proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("221.224.156.82", 8080));
+        //设置代理的用户名密码
+//        Authenticator.setDefault(new MyAuth("用户名", "密码"));
+        // 设定连接的相关参数
+//        URL url = new URL(locationUrl);
+//        HttpURLConnection connection = (HttpURLConnection) url.openConnection(proxy);
+	}
+	
 	public static void main(String[] args){
+//		System.setProperty("http.maxRedirects", "50");  
+//        System.getProperties().setProperty("proxySet", "true");  
+//        // 如果不设置，只要代理IP和代理端口正确,此项不设置也可以  
+//        String ip = "221.224.156.82";  
+//        System.getProperties().setProperty("http.proxyHost", ip);  
+//        System.getProperties().setProperty("http.proxyPort", "80");  
+          
+        //确定代理是否设置成功  
+//        try {
+//			System.out.println((getDocument("http://baidu.com")));
+//		} catch (IOException e1) {
+//			e1.printStackTrace();
+//		} 
+		
 		long start = System.currentTimeMillis();
 		try {
 			getFiction(url);
@@ -104,15 +127,13 @@ public class Main4 {
 				System.out.println("【"+i+"】:"+c_name+" 下载失败,正在重试");
 				for(;retry<MAX_RETRY;retry++) {
 					try {
-						Thread.sleep(2000);
 						getAndSaveFiction(url + c_path);
 						break;
 					} catch (Exception e1) {
 						System.out.println("【"+i+"】:"+c_name+" 第"+(retry+1)+"重试失败");
-						// 等待2秒再重试
-						Thread.sleep(2000);
 					}
-					
+					// 等待2秒再重试
+					Thread.sleep(2000);
 				}
 				if(retry >= MAX_RETRY) {
 					throw e;
@@ -120,12 +141,14 @@ public class Main4 {
 			}
 
 			System.out.println("【"+i+"】:"+c_name+" 下载完成！");
+			Thread.sleep(2000);
 		}
 	}
 
 	public static String getDocument(String strURL) throws IOException
 	{
 	    URL url = new URL(strURL);  
+//		HttpURLConnection conn = (HttpURLConnection) url.openConnection(proxy);  
 		HttpURLConnection conn = (HttpURLConnection) url.openConnection();  
 		conn.setReadTimeout(5000);
 	    conn.addRequestProperty("Accept-Language", "en-US,en;q=0.8");
@@ -163,16 +186,23 @@ public class Main4 {
 	       // System.out.println("Redirect to URL : " + newUrl);
 
 	    }
-	    InputStreamReader input = new InputStreamReader(conn.getInputStream(), charset);
-	    BufferedReader bufReader = new BufferedReader(input);  
-	    String line = "";  
-	    StringBuilder contentBuf = new StringBuilder();  	
-	    while ((line = bufReader.readLine()) != null) {  
-	        contentBuf.append(line);  
-	    }  
-	    String buf = contentBuf.toString();
-//	    System.out.println(strURL);
-//	    System.out.println(buf);
+	    BufferedReader bufReader = null;
+	    
+	    String buf;
+		try {
+			InputStreamReader input = new InputStreamReader(conn.getInputStream(), charset);
+			bufReader = new BufferedReader(input);  
+			String line = "";  
+			StringBuilder contentBuf = new StringBuilder();  	
+			while ((line = bufReader.readLine()) != null) {  
+			    contentBuf.append(line);  
+			}  
+			buf = contentBuf.toString();
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			bufReader.close();
+		}
 	    return buf;
 	}
 	
@@ -181,8 +211,12 @@ public class Main4 {
 		// 获取章节内容
 		String buf = getDocument(index);
 		
-		String fictionContent = buf.substring(buf.indexOf("content")+6,buf.lastIndexOf("bottem2")-22);
+		String fictionContent = buf.substring(buf.lastIndexOf("content")+15,buf.lastIndexOf("bottem2")-22);
 		fictionContent = fictionContent.replace("&nbsp;", "").replace("<br />", "\r\n");
+		fictionContent = fictionContent.replace("the file was saved using trial version of chmdepiler.", "").replace("download chmdepiler from: （结尾英文忽略即可）", "");
+		fictionContent = fictionContent.replace("this file was saved using unregistered version of chmdepiler.", "").replace("download chmdepiler at: （结尾英文忽略即可）", "");
+		fictionContent = fictionContent.replace("\");", "").replace("('", "");
+		fictionContent = fictionContent.replace("')", "").replace("##", "");
 //	    System.out.println(fictionContent);
 	    writer.write(fictionContent);
 	    writer.write("\r\n");
